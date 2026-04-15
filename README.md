@@ -1,6 +1,6 @@
 # 🎬 Discord Movie Bot
 
-Bot de Discord que publica información de películas en un canal de blog usando la API de TMDB.
+Bot de Discord que publica información de películas en un canal de Foro de Discord usando la API de TMDB.
 
 ## Comando disponible
 
