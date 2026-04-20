@@ -78,8 +78,7 @@ python bot.py
 
 Deberías ver en consola:
 ```
-✅ Bot conectado como TuBot#1234 (ID: ...)
-📢 Canal de blog: ...
+🌍 Sync global: 1 comandos
 ```
 
 ---
