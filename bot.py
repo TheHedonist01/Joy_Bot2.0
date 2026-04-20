@@ -38,8 +38,14 @@ async def buscar_pelicula(nombre: str):
             if resp.status != 200:
                 print("❌ Error TMDB:", resp.status)
                 return None
+
             data = await resp.json()
-            return data.get("results", [None])[0]
+            results = data.get("results", [])
+
+            if not results:
+                return None  # 🔥 clave
+
+            return results[0]
 
 
 async def detalle_pelicula(movie_id: int):
@@ -65,21 +71,27 @@ def formatear_duracion(minutos: int):
     return f"{h}h {m}m" if h else f"{m}m"
 
 
-def construir_embed(pelicula):
-    embed = discord.Embed(
-        title=f"🎬 {pelicula.get('title')}",
-        description=pelicula.get("overview", "Sin sinopsis")[:400],
-        color=discord.Color.green(),
+def construir_texto_plano(pelicula, usuario):
+    titulo = pelicula.get('title', 'Sin título')
+    sinopsis = pelicula.get("overview", "Sin sinopsis")[:400]
+    rating = str(pelicula.get("vote_average", "N/A"))
+    estreno = pelicula.get("release_date", "N/A")
+    duracion = formatear_duracion(pelicula.get("runtime"))
+    poster_url = f"{TMDB_IMAGE_BASE}{pelicula['poster_path']}" if pelicula.get("poster_path") else ""
+
+    # Estructuramos la información de forma limpia y directa
+    texto = (
+        f"📌 **{titulo} - [{estreno}]**\n\n"
+        f"🎬 **{titulo}**\n"
+        f"*{sinopsis}...*\n\n"
+        f"⭐ **Rating:** {rating} | 📅 **Estreno:** {estreno} | ⏱️ **Duración:** {duracion}\n"
     )
 
-    embed.add_field(name="⭐ Rating", value=str(pelicula.get("vote_average")), inline=True)
-    embed.add_field(name="📅 Estreno", value=pelicula.get("release_date"), inline=True)
-    embed.add_field(name="⏱️ Duración", value=formatear_duracion(pelicula.get("runtime")), inline=True)
+    # Añadimos la URL al final para que Discord genere la imagen automáticamente
+    if poster_url:
+        texto += f"\n{poster_url}"
 
-    if pelicula.get("poster_path"):
-        embed.set_image(url=f"{TMDB_IMAGE_BASE}{pelicula['poster_path']}")
-
-    return embed
+    return texto
 
 
 # ─── Slash Command ──────────────────────────────────────────────────────────
@@ -101,25 +113,21 @@ async def pelicula(interaction: discord.Interaction, nombre: str):
         if not data:
             await interaction.followup.send("❌ Error al obtener detalles.", ephemeral=True)
             return
-
-        embed = construir_embed(data)
-
-        # 🔥 fetch en vez de get (evita cache issues)
+        
+        # 🔥 Generamos el texto plano en lugar del embed
+        texto = construir_texto_plano(data, interaction.user.display_name)
+        
         blog_channel = await bot.fetch_channel(BLOG_CHANNEL_ID)
 
         if isinstance(blog_channel, discord.ForumChannel):
             await blog_channel.create_thread(
-            name=data.get("title", "Película"),
-            content=f"📌 {interaction.user.display_name} agregó:",
-            embed=embed
+                name=data.get("title", "Película"),
+                content=texto # Enviamos solo el texto
             )
         else:
-            await blog_channel.send(
-            content=f"📌 {interaction.user.display_name} agregó:",
-            embed=embed
-        )
+            await blog_channel.send(content=texto) # Enviamos solo el texto
 
-        await interaction.followup.send("✅ Publicado!", ephemeral=True)
+        await interaction.followup.send("✅ ¡Publicado!", ephemeral=True)
 
     except Exception as e:
         print("💥 ERROR:", e)
