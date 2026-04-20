@@ -13,7 +13,7 @@ TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 BLOG_CHANNEL_ID = int(os.getenv("BLOG_CHANNEL_ID"))
 print("API KEY:", TMDB_API_KEY)
 
-GUILD_ID = 1399822549906620438  # ← PONÉ TU SERVER ID
+GUILD_ID = ----  # ← PONÉ TU SERVER ID
 
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
